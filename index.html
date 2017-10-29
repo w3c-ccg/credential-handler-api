@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Credential Handler API
+    </title>
+    <meta charset='utf-8'>
+    <script src='https://www.w3.org/Tools/respec/respec-w3c-common' class=
+    'remove'></script>
+    <script src="./common.js" class="remove"></script>
+    <!-- <script src='utils.js' class='remove'></script> -->
+    <script class='remove'>
+      var respecConfig = {
+            github:    "https://github.com/w3c-ccg/credential-handler-api/",
+            shortName:  "credential-handler",
+            edDraftURI:   "https://w3c-ccg.github.io/credential-handler-api/",
+            specStatus: "ED",
+            editors: [
+                {   name:       "Dave Longley",
+                    url:        "https://github.com/dlongley",
+                    company:    "Digital Bazaar",
+                    companyURL: "https://digitalbazaar.com"
+                },
+                {   name:       "Manu Sporny",
+                    url:        "https://manu.sporny.org",
+                    company:    "Digital Bazaar",
+                    companyURL: "https://digitalbazaar.com"
+                },
+            ],
+            authors: [
+                {   name:       "Dave Longley",
+                    url:        "https://github.com/dlongley",
+                    company:    "Digital Bazaar",
+                    companyURL: "https://digitalbazaar.com"
+                },
+                {   name:       "Manu Sporny",
+                    url:        "https://manu.sporny.org",
+                    company:    "Digital Bazaar",
+                    companyURL: "https://digitalbazaar.com"
+                },
+            ],
+            //license:      "w3c-software-doc",
+            wg:           "Credentials Community Group",
+            wgURI:        "https://www.w3.org/community/credentials/",
+            //wgPatentURI:  "https://www.w3.org/2004/01/pp-impl/83744/status",
+            testSuiteURI: "https://w3c-test.org/credential-handler-api/",
+            issueBase:    "https://github.com/w3c-ccg/credential-handler-api/issues/",
+            githubAPI:    "https://api.github.com/repos/w3c-ccg/credential-handler-api",
+        };
+    </script>
+    <style>
+        dt { margin-top: 0.75em; }
+        table { margin-top: 0.75em; border-collapse:collapse; border-style:hidden hidden none hidden }
+        table thead { border-bottom:solid }
+        table tbody th:first-child { border-left:solid }
+        table td, table th { border-left:solid; border-right:solid; border-bottom:solid thin; vertical-align:top; padding:0.2em }
+        li { margin-top: 0.5em; margin-bottom: 0.5em;}
+    </style>
+  </head>
+  <body>
+    <section id='abstract'>
+      <p>
+        <a data-cite="credential-management-1">Credential Management Level 1</a>
+        describes an imperative API enabling a website to request a user’s
+        credentials from a user agent, and to help the user agent correctly
+        store user credentials for future use. User agents implementing that
+        API prompt the user to select a way to handle a credential request,
+        after which the user agent returns a credential to the originating
+        site. This specification defines capabilities that enable Web
+        applications to handle credential requests.
+      </p>
+    </section>
+    <section id='sotd'>
+      <p>
+        The Credentials Community Group maintains <a href=
+        "https://github.com/w3c-ccg/credential-handler-api/issues">a list of
+        all bug reports that the group has not yet addressed</a>. This draft
+        highlights some of the pending issues that are still to be discussed
+        in the community group. No decision has been taken on the outcome of
+        these issues including whether they are valid. Pull requests with
+        proposed specification text for outstanding issues are strongly
+        encouraged.
+      </p>
+    </section>
+    <section class='informative'>
+      <h2>
+        Introduction
+      </h2>
+      <p>
+        The mission of the Credentials Community Group is to explore the
+        creation, storage, presentation, verification, and user control of
+        credentials. Its focus is placed on a verifiable credential (a set of
+        claims) created by an issuer about a subject: a person, group, or
+        thing. It seeks solutions inclusive of approaches such as:
+        self-sovereign identity; presentation of proofs by the bearer; data
+        minimization; and centralized, federated, and decentralized registry and
+        identity systems. Therefore, the Credentials Community Group presents
+        a specification that extends the
+        <a data-cite="credential-management-1">Credential Management Level 1</a>
+        API to allow users to designate trusted third party Web applications
+        as handlers for credential requests and credential storage.
+      </p>
+      <p>
+        A <dfn>credential repository</dfn> is a Web application that can
+        handle credential requests and credential storage on behalf of the
+        user. This specification defines a number of new Web platform features
+        to handle credential requests and credential storage:
+      </p>
+      <ul>
+        <li>An origin-based permission to handle credential request and
+        credential store events.
+        </li>
+        <li>A flexible new <a>Credential</a> (of [[!credential-management-1]])
+        <a>WebCredential</a>.
+        </li>
+        <li>A credential request event type (<a>CredentialRequestEvent</a>) and
+        a credential store event type (<a>CredentialStoreEvent</a>). A
+        <dfn>credential handler</dfn> is an event handler for
+        <a>CredentialRequestEvent</a> and <a>CredentialStoreEvent</a>.
+        </li>
+        <li>An extension to the service worker registration interface
+        (<a>CredentialManager</a>) to manage the definition, display, and user
+        selection of <a>CredentialHint</a>s.
+        </li>
+        <li>A mechanism to respond to CredentialRequestEvent and
+        CredentialStoreEvent.
+        </li>
+      </ul>
+      <p>
+        This specification does not address how software built with
+        operating-system specific mechanisms (e.g., "native mobile apps")
+        handle credential requests and credential storage.
+      </p>
+    </section>
+    <section id='conformance'>
+      <p>
+        This specification defines one class of products:
+      </p>
+      <dl>
+        <dt>
+          <dfn>Conforming user agent</dfn>
+        </dt>
+        <dd>
+          <p>
+            A <a>user agent</a> MUST behave as described in this specification
+            to be considered conformant. In this specification, <dfn>user
+            agent</dfn> means a <em>Web browser or other interactive user
+            agent</em> as defined in [[!HTML5]].
+          </p>
+          <p>
+            User agents MAY implement algorithms given in this specification in
+            any way desired, so long as the end result is indistinguishable
+            from the result that would be obtained by the specification's
+            algorithms.
+          </p>
+          <p>
+            A conforming Credential Handler API user agent MUST also be a
+            <em>conforming implementation</em> of the IDL fragments of this
+            specification, as described in the “Web IDL” specification.
+            [[!WEBIDL-LS]]
+          </p>
+          <aside class="note">
+            This specification uses both the terms "conforming user agent(s)"
+            and "user agent(s)" to refer to this product class.
+          </aside>
+        </dd>
+      </dl>
+    </section>
+    <section id="model">
+      <h2>
+        Overview of Handling Credential Request and Storage
+      </h2>
+      <p>
+        In this document we envision the following flow for a credential
+        request:
+      </p>
+      <ol>
+        <li>An origin requests permission from the user to handle credential
+        request and storage for a set of supported credential types. For
+        example, a user visiting a digital wallet provider site may be prompted
+        to register a credential handler from that origin. The origin
+        establishes the scope of the permission but the origin's capabilities
+        may evolve without requiring additional user consent.
+        </li>
+        <li>
+          <a>Credential handler</a>s are defined in <a>service worker</a> code.
+        </li>
+        <li>During service worker registration, the <a>CredentialManager</a> is
+        used to set:
+          <ul>
+            <li>A list of <a data-lt="CredentialHint.enabledTypes">enabled
+            WebCredential types</a>.
+            </li>
+            <li>[Optionally] the conditions under which the handler supports a
+            given WebCredential type; these <a data-lt=
+            "CredentialHint.match">match</a> play a role in matching
+            computations.
+            </li>
+            <li>Information used in the display of <a data-lt=
+            "CredentialManager.hints">hints</a> supported by the
+            credential handler.
+            </li>
+          </ul>
+        </li>
+        <li>There are two entry points for interaction with a credential
+        handler: when a relying party (aka <dfn>verifier</dfn>) calls the
+        [[credential-management-1]] method <a>get()</a> (e.g., when the user
+        pushes a button on a page that requires identity attributes or
+        authentication) with <a>WebCredentialRequestOptions</a> and
+        when an <dfn>issuer</dfn> calls the [[credential-management-1]] method
+        <a>store()</a> (e.g., when the user pushes a button to receive a
+        credential) with a WebCredential. In both of these cases, the
+        user agent computes a list of candidate credential hints, comparing
+        the WebCredential types accepted by the relying party with those
+        supported by registered credential handlers. For WebCredential types
+        that support additional filtering, the relying party's specific request
+        and the match information from each credential hint is compared as part
+        of determining whether there is compatibility.
+        </li>
+        <li>The user agent displays a set of choices to the user: the
+        registered <a data-lt="CredentialManager.hints">hints</a> of
+        the candidate credential handlers. The user agent displays these choices
+        using information (labels and icons) provided at registration or
+        otherwise available from the Web app.
+        </li>
+        <li>When the user selects a <a data-lt=
+        "CredentialManager.hints">hint</a>, the user agent
+        <a>fires</a> a <a>CredentialRequestEvent</a> (cf. the <a>user
+        interaction task source</a>) or a <a>CredentialStoreEvent</a> (depending
+        on the method called) in the service worker whose <a data-lt=
+        "ServiceWorkerRegistration.credentialManager">CredentialManager</a> the
+        hint was registered with. The <a>CredentialRequestEvent</a> includes
+        the CredentialRequestOptions (defined in [[!credential-management-1]]),
+        including credential-type-specific options, as well as additional
+        information (e.g., origin and selected hint).
+        </li>
+        <li>Once activated, the credential handler performs whatever steps are
+        necessary to <a href="#handling-a-credential-request">handle the
+        credential request</a> or
+        <a href="#handling-credential-storage">handle credential storage</a>,
+        and return an appropriate WebCredential to the relying party or issuer.
+        If interaction with the user is necessary, the <a>credential handler</a>
+        can open a context-specific window for that purpose.
+        </li>
+        <li>The user agent receives a response asynchronously once the
+        credential handler has finished handling the request. The response
+        is a WebCredential or null if the request was denied.
+        </li>
+      </ol>
+      <p class="issue" title=
+      "Which party is responsible for signing Verifiable Profiles?"
+      data-number="1">
+        The origin information of the relying party may be blinded when
+        received via a CredentialRequestEvent.
+      </p>
+      <p class="note">
+        An origin may implement a credential repository with more than one
+        service worker and therefore multiple <a>credential handler</a>s may
+        be registered per origin. The handler that is invoked is determined by
+        the selection made by the user of a
+        <a data-lt="CredentialManager.hints">credential hint</a>. The
+        <a>service worker</a> which stored the <a data-lt=
+        "CredentialManager.hints">credential hint</a> with its
+        <a data-lt=
+        "ServiceWorkerRegistration.credentialManager">CredentialManager</a>
+        is the one that will be invoked.
+      </p>
+      <section class="informative" id="handling-a-credential-request">
+        <h2>
+          Handling a Credential Request
+        </h2>
+        <p>
+          The logic of a credential handler is driven by the WebCredential
+          types that it supports. Some WebCredential types may require
+          very little processing on the part of the credential handler other
+          than retrieving a WebCredential from its storage and returning it
+          as a response.
+        </p>
+        <p>
+          In contrast, some Web Credential types, such as
+          <a>VerifiableProfile</a> include a custom query parameter that
+          must be understood and processed by the credential handler in order
+          for it to return an appropriate WebCredential in response. This
+          may involve presenting a user interface to allow the user to make
+          selections. In some cases, a credential handler may need to generate
+          a WebCredential dynamically with the assistance of an issuer or
+          blinding service. It may also need to generate a zero knowledge proof
+          or use some other privacy enhancing cryptographic method.
+        </p>
+        <p>
+          Therefore, handling a credential request may include numerous
+          interactions: with the user through a new contextual window or other
+          APIs (such as [[!WebCryptoAPI]]) or with other services and origins
+          through web requests or other means.
+        </p>
+        <p>
+          Once a WebCredential is returned to the relying party website, it is
+          its job to perform whatever verification is appropriate for its type.
+        </p>
+        <p>
+          This specification does not address the activities that occur
+          between the credential handler accepting the
+          <a>CredentialRequestEvent</a> and the credential handler returning a
+          response. All of the activities which may be required to configure
+          the credential handler and handle the credential request are left to
+          the implementation of the credential handler, including:
+        </p>
+        <ul>
+          <li>how the user establishes an account with an origin that provides
+          credential services.
+          </li>
+          <li>how an origin authenticates a user.
+          </li>
+          <li>how communication takes place between the credential repository
+          server and the credential repository Web application, or between a
+          credential repository origin and other parties.
+          </li>
+        </ul>
+        <p>
+          Thus, an origin will rely on many other Web technologies defined
+          elsewhere for lifecycle management, security, user authentication,
+          user interaction, and so on.
+        </p>
+      </section>
+      <section class="informative" id="handling-credential-storage">
+        <h2>
+          Handling Credential Storage
+        </h2>
+        <p>
+          The logic of a credential handler is driven by the WebCredential
+          types that it supports. Some WebCredential types may require
+          very little processing on the part of the credential handler other
+          than storing the WebCredential in a database and returning it
+          as a response.
+        </p>
+        <p>
+          In contrast, some Web Credential types, such as
+          <a>VerifiableProfile</a> may include multiple sub-credentials whereby
+          the user may only elect to store some subset of them, through the use
+          of a user interface provided by the credential handler.
+        </p>
+        <p>
+          Handling credential storage may include numerous interactions: with
+          the user through a new contextual window or other APIs (such as
+          [[!WebCryptoAPI]]) or with other services and origins through web
+          requests or other means.
+        </p>
+        <p>
+          The WebCredential that is returned to the issuer website provides
+          information on what was stored by the credential handler, enabling
+          the issuer website to take whatever next actions are appropriate.
+        </p>
+        <p>
+          This specification does not address the activities that occur
+          between the credential handler accepting the
+          <a>CredentialStoreEvent</a> and the credential handler returning a
+          response. All of the activities which may be required to configure
+          the credential handler and handle credential storage are
+          left to the implementation of the credential handler, including:
+        </p>
+        <ul>
+          <li>how the user establishes an account with an origin that provides
+          credential services.
+          </li>
+          <li>how an origin authenticates a user.
+          </li>
+          <li>how communication takes place between the credential repository
+          server and the credential repository Web application, or between a
+          credential repository origin and other parties.
+          </li>
+        </ul>
+        <p>
+          Thus, an origin will rely on many other Web technologies defined
+          elsewhere for lifecycle management, security, user authentication,
+          user interaction, and so on.
+        </p>
+      </section>
+      <section class="informative">
+        <h2>
+          Structure of a Web Credential Repository
+        </h2>
+        <figure>
+          <img alt=
+          "Architecture of a (Web) credential repository as defined in this specification."
+          src="web-repository-architecture.png">
+          <figcaption>
+            A Web credential repository is associated with an origin.
+            Credential handlers respond to <a>CredentialRequestEvent</a>s and
+            <a>CredentialStoreEvent</a>s. <a>CredentialManager</a>s
+            manage the definition, display, and user selection of
+            <a>CredentialHint</a>s. A <a>CredentialHint</a> supports one
+            or more WebCredential types.
+          </figcaption>
+        </figure>
+      </section>
+      <section class="informative">
+        <h2>
+          Relation to Other Types of Credential Repositories
+        </h2>
+        <p>
+          This specification does not address how third-party mobile credential
+          repository apps interact (through proprietary mechanisms) with user
+          agents, or how user agents themselves provide simple credential
+          repository functionality.
+        </p>
+        <figure>
+          <img alt=
+          "Different types of credential repositories. Credential Handler API
+          is for Web apps."
+          src="credential-repository-types.png">
+          <figcaption>
+            Credential Handler API enables Web apps to handle credential
+            management. Other types of credential repository apps may use other
+            (proprietary) mechanisms.
+          </figcaption>
+        </figure>
+      </section>
+    </section>
+    <section id="registration">
+      <h2>
+        Registration
+      </h2>
+      <section data-dfn-for="ServiceWorkerRegistration" data-link-for=
+      "ServiceWorkerRegistration">
+        <h2>
+          Extension to the <code>ServiceWorkerRegistration</code> interface
+        </h2>
+        <p>
+          This specification extends the <a>ServiceWorkerRegistration</a>
+          interface with the addition of a <dfn>credentialManager</dfn>
+          attribute.
+        </p>
+        <pre class="idl">
+        partial interface ServiceWorkerRegistration {
+          readonly attribute CredentialManager credentialManager;
+        };
+      </pre>
+      </section>
+      <section data-dfn-for="CredentialManager" data-link-for="CredentialManager">
+        <h2>
+          <dfn>CredentialManager</dfn> interface
+        </h2>
+        <pre class="idl">
+      [SecureContext, Exposed=(Window,Worker)]
+      interface CredentialManager {
+        [SameObject] readonly attribute CredentialHints hints;
+        [Exposed=Window] static Promise&lt;PermissionState&gt; requestPermission();
+      };
+      </pre>
+        <p>
+          The <a>CredentialManager</a> is used by <a>credential repositories</a>
+          to manage their associated hints and supported WebCredential types.
+        </p>
+        <section>
+          <h2>
+            <dfn>hints</dfn> attribute
+          </h2>
+          <p>
+            This attribute allows manipulation of credential hints associated
+            with a service worker (and therefore its credential handler). To be
+            a candidate credential handler, a handler must have at least one
+            registered credential hint to present to the user. That instrument
+            needs to match the WebCredential types and type-specific query
+            information specified by the credential request.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>requestPermission()</dfn> method
+          </h2>
+          <p class="note">
+            The user agent is NOT REQUIRED to prompt the user to grant
+            permission to the origin for each new supported WebCredential
+            type or new credential hint.
+          </p>
+          <p>
+            When called, this method executes the following steps:
+          </p>
+          <ol>
+            <li>Let <var>p</var> be a new promise.
+            </li>
+            <li>Return <var>p</var> and perform the remaining steps in
+            parallel:
+            </li>
+            <li>Let <var>permission</var> be the result of running
+              <a data-cite="!permissions#dfn-retrieve-the-permission-state">retrieve
+              the permission state algorithm</a> of the permission associated
+              with <a>credential handler</a>'s <a>origin</a>.
+            </li>
+            <li>If <var>permission</var> is "prompt", ask the user whether
+            allowing adding new credential hints for the <a data-cite=
+            "!HTML#current-settings-object">current settings object</a>'s
+            origin is acceptable. If it is, set <var>permission</var> to
+            "granted", and "denied" otherwise.
+            </li>
+            <li>Resolve <var>p</var> with <var>permission</var>.
+            </li>
+          </ol>
+        </section>
+      </section>
+      <section data-dfn-for="CredentialHints" data-link-for=
+      "CredentialHints">
+        <h2>
+          <dfn>CredentialHints</dfn> interface
+        </h2>
+        <pre class="idl">
+      [SecureContext, Exposed=(Window,Worker)]
+      interface CredentialHints {
+          Promise&lt;boolean&gt;           delete(DOMString hintKey);
+          Promise&lt;CredentialHint&gt;    get(DOMString hintKey);
+          Promise&lt;sequence&lt;DOMString&gt;&gt;  keys();
+          Promise&lt;boolean&gt;           has(DOMString hintKey);
+          Promise&lt;void&gt;              set(DOMString hintKey, CredentialHint hint);
+          Promise&lt;void&gt;           clear();
+      };
+      </pre>
+        <p>
+          The <a>CredentialHints</a> interface represents a collection of
+          credential hints, each uniquely identified by a <dfn>hintKey</dfn>.
+          The <var>hintKey</var> identifier will be passed to the credential
+          handler to indicate the <a>CredentialHint</a> selected by the user. A
+          <a>CredentialHint</a> is associated with a context or aspect of the
+          user for which they store certain credentials, similar to a digital
+          version of a physical wallet.
+        </p>
+        <section>
+          <h2>
+            <dfn>delete()</dfn> method
+          </h2>
+          <p>
+            When called, this method executes the following steps:
+          </p>
+          <ol>
+            <li>Let <var>p</var> be a new promise.
+            </li>
+            <li>Return <var>p</var> and perform the remaining steps in
+            parallel:
+            </li>
+            <li>If the collection contains a <a>CredentialHint</a> with a
+            matching <var>hintKey</var>, remove it from the collection
+            and resolve <var>p</var> with <b>true</b>.
+            </li>
+            <li>Otherwise, resolve <var>p</var> with <b>false</b>.
+            </li>
+          </ol>
+        </section>
+        <section>
+          <h2>
+            <dfn>get()</dfn> method
+          </h2>
+          <p>
+            When called, this method executes the following steps:
+          </p>
+          <ol>
+            <li>Let <var>p</var> be a new promise.
+            </li>
+            <li>Return <var>p</var> and perform the remaining steps in
+            parallel:
+            </li>
+            <li>If the collection contains a <a>CredentialHint</a> with a
+            matching <var>hintKey</var>, resolve <var>p</var> with that
+            <a>CredentialHint</a>.
+            </li>
+            <li>Otherwise, reject <var>p</var> with a <a>DOMException</a> whose
+            value is "<a>NotFoundError</a>".
+            </li>
+          </ol>
+        </section>
+        <section>
+          <h2>
+            <dfn>keys()</dfn> method
+          </h2>
+          <p>
+            When called, this method executes the following steps:
+          </p>
+          <ol>
+            <li>Let <var>p</var> be a new promise.
+            </li>
+            <li>Return <var>p</var> and perform the remaining steps in
+            parallel:
+            </li>
+            <li>Resolve <var>p</var> with a <dfn>Sequence</dfn> that contains
+            all the <var>hintKey</var>s for the <a>CredentialHint</a>s
+            contained in the collection, in original insertion order.
+            </li>
+          </ol>
+        </section>
+        <section>
+          <h2>
+            <dfn>has()</dfn> method
+          </h2>
+          <p>
+            When called, this method executes the following steps:
+          </p>
+          <ol>
+            <li>Let <var>p</var> be a new promise.
+            </li>
+            <li>Return <var>p</var> and perform the remaining steps in
+            parallel:
+            </li>
+            <li>If the collection contains a <a>CredentialHint</a> with a
+            matching <var>hintKey</var>, resolve <var>p</var> with
+            <b>true</b>.
+            </li>
+            <li>Otherwise, resolve <var>p</var> with <b>false</b>.
+            </li>
+          </ol>
+        </section>
+        <section>
+          <h2>
+            <dfn>set()</dfn> method
+          </h2>
+          <p>
+            When called, this method executes the following steps:
+          </p>
+          <ol>
+            <li>Let <var>permission</var> be the result of running
+              <a data-cite="!permissions#dfn-retrieve-the-permission-state">retrieving
+              the permission state</a> of the permission associated with
+              <a>credential handler</a>'s <a>origin</a>.
+            </li>
+            <li>If <var>permission</var> is not "granted", then return a
+            <a>Promise</a> rejected with a <a>NotAllowedError</a>.
+            </li>
+            <li>If the <a data-lt="CredentialHint.icons">icons</a> member of
+            <var>hint</var> is present, then:
+              <ol>
+                <li>Let <var>convertedIcons</var> be the result of running the
+                <a>convert image objects</a> algorithm passing
+                <var>hint</var>.<a data-lt=
+                "CredentialHint.icons">icons</a> as the argument.
+                </li>
+                <li>If the <var>convertedIcons</var> is an empty
+                <a>Sequence</a>, then return a <a>Promise</a> rejected with a
+                <a>TypeError</a>.
+                </li>
+                <li>Set <var>hint</var>.<a data-lt=
+                "CredentialHint.icons">icons</a> to
+                <var>convertedIcons</var>.
+                </li>
+              </ol>
+            </li>
+            <li>Let <var>p</var> be a new promise.
+            </li>
+            <li>Return <var>p</var> and perform the remaining steps in
+            parallel:
+            </li>
+            <li>If the <a data-lt="CredentialHint.icons">icons</a> member of
+            <var>hint</var> is present, then for each <var>icon</var> in
+            <var>hint</var>.<a data-lt="CredentialHint.icons">icons</a>:
+              <ol>
+                <li>If the user agent wants to display the <var>icon</var>,
+                then:
+                  <ol>
+                    <li>Let <var>fetchedImage</var> be the result of running
+                    the <a data-cite=
+                    "!appmanifest#fetching-image-objects">fetching image
+                    object</a> passing <var>icon</var> as the argument.
+                    </li>
+                    <li>Set <var>icon</var>.<a>[[\fetchedImage]]</a> to
+                    <var>fetchedImage</var>.
+                    </li>
+                  </ol>
+                </li>
+              </ol>
+            </li>
+            <li>If the collection contains a <a>CredentialHint</a> with a
+            matching <var>hintKey</var>, replace it with the
+            <a>CredentialHint</a> in <var>hint</var>.
+            </li>
+            <li>Otherwise, insert the <a>CredentialHint</a> in
+            <var>hint</var> as a new member of the collection and associate
+            it with the key <var>hintKey</var>.
+            </li>
+            <li>Resolve <var>p</var>.
+            </li>
+          </ol>
+        </section>
+        <section>
+          <h2>
+            <dfn>clear()</dfn> method
+          </h2>
+          <p>
+            When called, this method executes the following steps:
+          </p>
+          <ol>
+            <li>Let <var>p</var> be a new promise.
+            </li>
+            <li>Return <var>p</var> and perform the remaining steps in
+            parallel:
+            </li>
+            <li>Remove all <a>CredentialHint</a>s from the collection and
+            resolve <var>p</var>.
+            </li>
+          </ol>
+        </section>
+        <section data-dfn-for="CredentialHint" data-link-for=
+        "CredentialHint">
+          <h2>
+            <dfn>CredentialHint</dfn> dictionary
+          </h2>
+          <pre class="idl">
+      dictionary CredentialHint {
+        required DOMString name;
+        sequence&lt;ImageObject&gt; icons;
+        sequence&lt;DOMString&gt; enabledTypes;
+        object match;
+      };
+      </pre>
+          <dl>
+            <dt>
+              <dfn>name</dfn> member
+            </dt>
+            <dd>
+              The <a>name</a> member is a string that represents the label for
+              this <a>CredentialHint</a> as it is usually displayed to the
+              user.
+            </dd>
+            <dt>
+              <dfn>icons</dfn> member
+            </dt>
+            <dd>
+              The <a>icons</a> member is an array of image objects that can
+              serve as iconic representations of the credential hint when
+              presented to the user for selection.
+            </dd>
+            <dt>
+              <dfn>enabledTypes</dfn> member
+            </dt>
+            <dd>
+              The <a>enabledTypes</a> member is a list of one or more
+              <a>WebCredential types</a> of the <a>WebCredential types</a>
+              supported by this hint.
+            </dd>
+            <dt>
+              <dfn>match</dfn> member
+            </dt>
+            <dd>
+              The <a>match</a> member is a list of WebCredential-type-specific
+              information that, if present in a credential request or
+              credential storage request, must match in order for this
+              credential hint to be considered compatible. For example, for the
+              <a>VerifiableProfile</a> WebCredential type, this object may
+              consist of an object with one field <a>VerifiableProfile</a>
+              that has a value that is another object with one field <a>id</a>
+              with a string value that is an identifier for an entity for which
+              VerifiableProfiles may be constructed or stored.
+            </dd>
+          </dl>
+        </section>
+        <section data-dfn-for="ImageObject" data-link-for="ImageObject">
+          <h2>
+            <dfn>ImageObject</dfn> dictionary
+          </h2>
+          <pre class="idl">
+      dictionary ImageObject {
+          required USVString src;
+          DOMString sizes;
+          DOMString type;
+      };
+      </pre>
+          <dl>
+            <dt>
+              <dfn>src</dfn> member
+            </dt>
+            <dd>
+              The <a>src</a> member is used to specify the <a>ImageObject</a>'s
+              source. It is a URL from which the user agent can fetch the
+              image’s data.
+            </dd>
+            <dt>
+              <dfn>sizes</dfn> member
+            </dt>
+            <dd>
+              The <a>sizes</a> member is used to specify the
+              <a>ImageObject</a>'s sizes. It follows the spec of sizes member
+              in <a data-cite="!HTML#the-link-element">HTML link element</a>,
+              which is a string consisting of an <a data-cite=
+              "!HTML#unordered-set-of-unique-space-separated-tokens">unordered
+              set of unique space-separated tokens</a> which are <a data-cite=
+              "!HTML#ascii-case-insensitive">ASCII case-insensitive</a> that
+              represents the dimensions of an image. Each keyword is either an
+              <a data-cite="!HTML#ascii-case-insensitive">ASCII
+              case-insensitive</a> match for the string "any", or a value that
+              consists of two valid non-negative integers that do not have a
+              leading U+0030 DIGIT ZERO (0) character and that are separated by
+              a single U+0078 LATIN SMALL LETTER X or U+0058 LATIN CAPITAL
+              LETTER X character. The keywords represent icon sizes in raw
+              pixels (as opposed to CSS pixels). When multiple image objects
+              are available, a user agent MAY use the value to decide which
+              icon is most suitable for a display context (and ignore any that
+              are inappropriate). The parsing steps for the <a>sizes</a> member
+              MUST follow <a data-cite="!HTML#attr-link-sizes">the parsing
+              steps for HTML link element sizes attribute</a>.
+            </dd>
+            <dt>
+              <dfn>type</dfn> member
+            </dt>
+            <dd>
+              The <a>type</a> member is used to specify the
+              <a>ImageObject</a>'s MIME type. It is a hint as to the media type
+              of the image. The purpose of this member is to allow a user agent
+              to ignore images of media types it does not support.
+            </dd>
+          </dl>
+        </section>
+        <section>
+          <h2>
+            <dfn>Convert image objects</dfn>
+          </h2>
+          <p>
+            When this algorithm with <var>inputImages</var> parameter is
+            invoked, the user agent must run the following steps:
+          </p>
+          <ol class="algorithm">
+            <li>Let <var>outputImages</var> be an empty <a>Sequence</a> of <a>
+              ImageObject</a>.
+            </li>
+            <li>For each <var>image</var> in <var>inputImages</var>:
+              <ol>
+                <li>If <var>image</var>.<a data-lt="ImageObject.type">type</a>
+                is not a <a data-cite="#valid-mime-type">valid MIME type</a> or
+                the value of type is not a supported media format, then return
+                an empty <a>Sequence</a> of <a>ImageObject</a>.
+                </li>
+                <li>If <var>image</var>.<a data-lt=
+                "ImageObject.sizes">sizes</a> is not a <a data-lt=
+                "ImageObject.sizes">valid value</a>, then return an empty
+                <a>Sequence</a> of <a>ImageObject</a>.
+                </li>
+                <li>Let <var>url</var> be the result of parsing
+                <var>image</var>.<a data-lt="ImageObject.src">src</a> with the
+                <a data-cite="!HTML#context-object">context object</a>'s
+                <a data-cite="!HTML#relevant-settings-object">relevant settings
+                object</a>'s <a data-cite="!HTML#api-base-url">API base
+                URL</a>.
+                </li>
+                <li>If <var>url</var> is failure, then return an empty
+                <a>Sequence</a> of <a>ImageObject</a>.
+                </li>
+                <li>If <var>url</var>'s <a data-cite=
+                "!HTML#concept-url-scheme">scheme</a> is not "https", then
+                return an empty <a>Sequence</a> of <a>ImageObject</a>.
+                </li>
+                <li>Set <var>image</var>.<a data-lt="ImageObject.src">src</a>
+                to <var>url</var>.
+                </li>
+                <li>Append <var>image</var> to <var>outputImages</var>
+                </li>
+              </ol>
+            </li>
+            <li>Return <var>outputImages</var>.
+            </li>
+          </ol>
+          <p>
+            According to the step 2.3, it is also possible to use the relative
+            url for <var>image</var>.<a data-lt="ImageObject.src">src</a>. The
+            following examples illustrate how relative URL resolution works in
+            different execution contexts.
+          </p>
+          <pre class="example html" title=
+          "Resolving the relative URL of image.src in window context.">
+        &lt;-- In this example, code is located in https://www.example.com/wallet/index.html --&gt;
+        &lt;script&gt;
+
+        const hintKey = "c8126178-3bba-4d09-8f00-0771bcfd3b11";
+        const { registration } = await navigator.serviceWorker.register("/register/sw.js");
+        await registration.credentialManager.credentialHints.set({
+          hintKey,
+          {
+            name: "My social account: pat@example.com",
+            enabledTypes: ["VerifiableProfile"],
+            icons: [{
+              src: "icon/lowres.webp",
+              sizes: "48x48",
+              type: "image/webp"
+            }],
+            match: {
+              VerifiableProfile: {
+                id: 'did:method1:1234-1234-1234-1234'
+              }
+            }
+          });
+
+        const { storedHint } =
+          await registration.credentialManager.credentialHints.get(hintKey);
+
+        // storedHint.icons[0].src == "https://www.example.com/wallet/icon/lowres.webp";
+
+        &lt;/script&gt;
+      </pre>
+          <pre class="example js" title=
+          "Resolving the relative URL of image.src in service worker context.">
+
+        // In this example, code is located in https://www.example.com/register/sw.js
+
+        const hintKey = "c8126178-3bba-4d09-8f00-0771bcfd3b11";
+        await self.registration.credentialManager.credentialHints.set({
+          hintKey,
+          {
+            name: "My social account: pat@example.com",
+            enabledTypes: ["VerifiableProfile"],
+            icons: [{
+              src: "../wallet/icon/lowres.webp",
+              sizes: "48x48",
+              type: "image/webp"
+            }],
+            match: {
+              VerifiableProfile: {
+                id: 'did:method1:1234-1234-1234-1234'
+              }
+            }
+          });
+
+        const { storedHint } =
+          await registration.credentialManager.credentialHints.get(hintKey);
+
+        // storedHint.icons[0].src == "https://www.example.com/wallet/icon/lowres.webp";
+      </pre>
+        </section>
+        <section id="register-example" class="informative">
+          <h2>
+            Registration Example
+          </h2>
+          <p>
+            The following example shows how to register a credential handler:
+          </p>
+          <pre class="example js" title="Credential Handler Registration">
+        button.addEventListener("click", async() =&gt; {
+          if (!window.CredentialManager) {
+            return; // not supported, so bail out.
+          }
+
+          const result = await CredentialManager.requestPermission();
+          if (result !== "granted") {
+            return;
+          }
+
+          const { registration } =
+            await navigator.serviceWorker.register('/sw.js');
+
+          // Excellent, we got it! Let's now set up the user's hints.
+          await addInstruments(registration);
+        }, { once: true });
+
+        function addHints(registration) {
+          return Promise.all([
+            registration.credentialManager.hints.set(
+              "dc2de27a-ca5e-4fbd-883e-b6ded6c69d4f",
+              {
+                name: "My social account: pat@example.com",
+                enabledTypes: ["VerifiableProfile"],
+                icons: [{
+                  src: "icon/lowres.webp",
+                  sizes: "48x48",
+                  type: "image/webp"
+                }],
+                match: {
+                  VerifiableProfile: {
+                    id: 'did:method1:1234-1234-1234-1234'
+                  }
+                }
+              }),
+
+            registration.credentialManager.hints.set(
+              "c8126178-3bba-4d09-8f00-0771bcfd3b11",
+              {
+                name: "My business account: pat@business.example.com",
+                enabledTypes: ["VerifiableProfile"],
+                match: {
+                  VerifiableProfile: {
+                    id: 'did:method1:1234-1234-1234-1235'
+                  }
+                }
+              }),
+
+            registration.credentialManager.hints.set(
+              "new-hint",
+              {
+                name: "Add a new identity",
+                enabledTypes: ["VerifiableProfile"]
+              }),
+            ]);
+          };
+     </pre>
+        </section>
+      </section>
+    </section>
+    <section id="hint-display-ordering">
+      <h2>
+        Origin and Hint Display for Selection
+      </h2>
+      <!-- TODO continue here -->
+      <p>
+        TODO: define matching algorithm here
+      </p>
+      <p>
+        After applying the matching algorithm, the user agent displays the
+        matching credential hints for the user to make a selection. This
+        specification includes a limited number of display requirements; most
+        user experience details are left to implementers.
+      </p>
+      <section>
+        <h2>
+          Ordering of Credential Hints
+        </h2>
+        <ul>
+          <li>The user agent <span class='rfc2119'>MUST</span> favor user-side
+          order preferences (based on user configuration or behavior) over
+          any other order preferences.
+          </li>
+          <li>The user agent <span class='rfc2119'>SHOULD</span> allow the user
+          to configure the display of matching credential handlers and
+          credential hints to control the ordering and define preselected
+          defaults.
+          </li>
+        </ul>
+        <p>
+          The following are examples of credential hint ordering:
+        </p>
+        <ul>
+          <li>For a given Web site, display credential hints in an order that
+          reflects usage patterns for the site (e.g., a frequently used
+          credential hint at the top, or the most recently used credential hint
+          at the top).
+          </li>
+          <li>Enable the user to set a preferred order for a given site or for
+          all sites.
+          </li>
+          <li>If the origin of the site being visited by the user matches the
+          origin of a credential handler, show the credential handler's hints
+          at the top of the list.
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>
+          Display of Hints
+        </h2>
+        <p>
+          The user agent <span class='rfc2119'>MUST</span> enable the user to
+          select any displayed hint.
+        </p>
+        <ul>
+          <li>At a minimum, we expect user agents to display an icon and label
+          for each matching origin to help the user make a selection.
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>
+          Selection of Credential Handlers
+        </h2>
+        <p>
+          Users agents may wish to enable the user to select individual
+          displayed CredentialHints. The credential handler would receive
+          information about the selected hint and could take action, potentially
+          eliminating an extra click (first open the credential repository
+          app then select the hint).
+        </p>
+      </section>
+    </section>
+    <section id="invocation">
+      <h2>
+        Invocation
+      </h2>
+      <p>
+        Only when a website invokes the <a data-cite=
+        "!credential-management-1#dom-credentialscontainer-get">get()</a>
+        and passes a <a>WebCredentialRequestOptions</a>
+        or the <a data-cite=
+        "!credential-management-1#dom-credentialscontainer-store">store()</a>
+        method and passes a <a>WebCredential</a>, will CredentialHints be
+        presented to the user for selection.
+      </p>
+      <p>
+        Once the user has selected a CredentialHint, the user agent fires a
+        <a>CredentialRequestEvent</a> (or a <a>CredentialStoreEvent</a> if
+        the Credential Management method called was <a>store()</a>) and uses
+        the subsequent <a>WebCredential</a> as a response.
+      </p>
+      <section data-dfn-for="WebCredential" data-link-for="WebCredential">
+        <h2>
+          <dfn>WebCredential</dfn> interface
+        </h2>
+        <pre class="idl">
+      [SecureContext, Exposed=(Window,Worker)]
+      interface WebCredential : Credential {
+          readonly attribute USVString dataType;
+          readonly attribute object data;
+      };
+      </pre>
+      </section>
+      <section data-dfn-for="ServiceWorkerGlobalScope" data-link-for=
+      "ServiceWorkerGlobalScope">
+        <h2>
+          Extension to <a>ServiceWorkerGlobalScope</a>
+        </h2>
+        <p>
+          This specification extends the <a>ServiceWorkerGlobalScope</a>
+          interface.
+        </p>
+        <pre class="idl">
+        partial interface ServiceWorkerGlobalScope {
+          attribute EventHandler oncredentialrequest;
+          attribute EventHandler oncredentialstore;
+        };
+        </pre>
+        <section>
+          <h2>
+            <dfn>oncredentialrequest</dfn> attribute
+          </h2>
+          <p>
+            The <a>oncredentialrequest</a> attribute is an <a>event handler</a>
+            whose corresponding <a>event handler event type</a> is
+            <a>CredentialRequestEvent</a>.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>oncredentialstore</dfn> attribute
+          </h2>
+          <p>
+            The <a>oncredentialstore</a> attribute is an <a>event handler</a>
+            whose corresponding <a>event handler event type</a> is
+            <a>CredentialStoreEvent</a>.
+          </p>
+        </section>
+      </section>
+      <section data-dfn-for="CredentialRequestEvent" data-link-for=
+      "CredentialRequestEvent">
+        <h2>
+          The <dfn>CredentialRequestEvent</dfn>
+        </h2>
+        <p>
+          The CredentialRequestEvent represents the data and methods available
+          to a Credential Handler after selection by the user. The user agent
+          communicates the <a>WebCredentialRequestOptions</a> to the Credential
+          Handler.
+        </p>
+        <pre class="idl">
+        [Constructor(DOMString type, CredentialRequestEventInit eventInitDict), Exposed=ServiceWorker]
+        interface CredentialRequestEvent : ExtendableEvent {
+          readonly attribute USVString credentialRequestOrigin;
+          readonly attribute object credentialRequestOptions;
+          readonly attribute DOMString hintKey;
+          Promise&lt;WindowClient?&gt; openWindow(USVString url);
+          void respondWith(Promise&lt;WebCredential&gt;handlerResponsePromise);
+        };
+        </pre>
+        <section>
+          <h2>
+            <dfn>credentialRequestOrigin</dfn> attribute
+          </h2>
+          <p>
+            This attribute is a string that indicates the <a data-cite=
+            "!HTML5#origin">origin</a> where the [[!credential-managment-1]]
+            method <a>get()</a> was called.
+          </p>
+          <p class="issue" title=
+          "Which party is responsible for signing Verifiable Profiles?"
+          data-number="1">
+            The origin information of the relying party may be blinded when
+            received via a CredentialRequestEvent. It would be blinded to
+            allow it to still be signed without revealing where the request
+            came from. The user agent would be responsible for indicating
+            the origin of the request via its user interface.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>credentialRequestOptions</dfn> attribute
+          </h2>
+          <p>
+            This attribute contains <a>WebCredentialRequestOptions</a>
+            dictionary containing the <a>WebCredential type</a> and
+            type-specific query that describes the credentials requested by
+            the web site.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>hintKey</dfn> attribute
+          </h2>
+          <p>
+            This attribute indicates the <a>CredentialHint</a> selected by
+            the user. It corresponds to the <a data-lt=
+            "hintKey">hintKey</a> provided to the
+            <a>CredentialManager.hints</a> interface during registration.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>openWindow</dfn>() method
+          </h2>
+          <p>
+            This method is used by the credential handler to show a window to
+            the user. When called, it runs the <a>open window algorithm</a>.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn data-lt=
+            "respondWith(handlerResponsePromise)">respondWith()</dfn> method
+          </h2>
+          <p>
+            This method is used by the credential handler to provide a
+            <a>WebCredential</a> when the request has been fulfilled. When
+            called, it runs the <a>Respond to Credential Request
+            Algorithm</a> with <var>event</var> and
+            <var>handlerResponsePromise</var> as arguments.
+          </p>
+        </section>
+        <section data-dfn-for="CredentialRequestEventInit">
+          <h2>
+            <dfn>CredentialRequestEventInit</dfn> dictionary
+          </h2>
+          <pre class="idl">
+            dictionary CredentialRequestEventInit : ExtendableEventInit {
+              USVString credentialRequestOrigin;
+              WebCredentialRequestOptions credentialRequestOptions;
+              DOMString hintKey;
+            };
+          </pre>
+          <p>
+            The <dfn>credentialRequestOrigin</dfn>,
+            <dfn>credentialRequestOptions</dfn>, and
+            <dfn>hintKey</dfn> members share their definitions with those
+            defined for <a>CredentialRequestEvent</a>.
+          </p>
+        </section>
+      </section>
+      <section>
+        <h2>
+          Internal Slots
+        </h2>
+        <p>
+          Instances of <a>CredentialRequestEvent</a> are created with the
+          internal slots in the following table:
+        </p>
+        <table>
+          <tr>
+            <th>
+              Internal Slot
+            </th>
+            <th>
+              Default Value
+            </th>
+            <th>
+              Description (<em>non-normative</em>)
+            </th>
+          </tr>
+          <tr>
+            <td>
+              <dfn>[[\windowClient]]</dfn>
+            </td>
+            <td>
+              null
+            </td>
+            <td>
+              The currently active <dfn>WindowClient</dfn>. This is set if a
+              credential handler is currently showing a window to the user.
+              Otherwise, it is null.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <dfn>[[\fetchedImage]]</dfn>
+            </td>
+            <td>
+              undefined
+            </td>
+            <td>
+              This value is a result of <a data-cite=
+              "!appmanifest#fetching-image-objects">fetching image object</a>
+              or a fallback image provided by the user agent.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <dfn>[[\respondWithCalled]]</dfn>
+            </td>
+            <td>
+              false
+            </td>
+            <td>
+              YAHO
+            </td>
+          </tr>
+        </table>
+      </section>
+      <section>
+        <h2>
+          Handling a CredentialRequestEvent
+        </h2>
+        <p>
+          Upon receiving a credential request by way of <a data-cite=
+          "!credential-management-1#dom-credentialscontainer-get">get()</a> and
+          subsequent user selection of a credential hint, the <a>user
+          agent</a> MUST run the following steps:
+        </p>
+        <ol>
+          <li>Let <var>registration</var> be the
+          <a>ServiceWorkerRegistration</a> corresponding to the
+          <a>CredentialHint</a> selected by the user.
+          </li>
+          <li>If <var>registration</var> is not found, reject the
+          <a>Promise</a> that was created by <a data-cite=
+          "!credential-management-1#dom-credentialscontainer-get">get()</a>
+          with a <a>DOMException</a> whose value is "<a>InvalidStateError</a>"
+          and terminate these steps.
+          </li>
+          <li>Invoke the <a>handle functional event</a> algorithm with a
+          <a>ServiceWorkerRegistration</a> of <var>registration</var> and <var>
+            callbackSteps</var> set to the following steps:
+            <ol>
+              <li>Set <var>global</var> to the global object that was provided
+              as an argument.
+              </li>
+              <li>Create a <a>trusted event</a>, <var>e</var>, that uses the
+              <a>CredentialRequestEvent</a> interface, with the event type
+              <a>credentialrequest</a>, which does not bubble, cannot be
+              canceled, and has no default action.
+              </li>
+              <li>Set the <a data-lt=
+              "CredentialRequestEvent.credentialRequestOrigin">credentialRequestOrigin</a>
+              attribute of <var>e</var> to the origin of the context where
+              <a data-cite=
+              "!credential-management-1#dom-credentialscontainer-get">get()</a>
+              was called.
+              </li>
+              <li>Set the <a data-lt=
+              "CredentialRequestEvent.credentialRequestOptions">credentialRequestOptions</a>
+              attributes of <var>e</var> to the <var>options</var> passed to
+              <a data-cite=
+              "!credential-management-1#dom-credentialscontainer-get">get()</a>.
+              </li>
+              <li>Set the <a data-lt=
+              "CredentialRequestEvent.hintKey">hintKey</a> attribute
+              of <var>e</var> to the <a>hintKey</a> of the selected
+              <a>CredentialHint</a>.
+              </li>
+              <li>Dispatch <var>e</var> to <var>global</var>.
+              </li>
+              <li>Wait for all of the promises in the <a>extend lifetime
+              promises</a> of <var>e</var> to resolve.
+              </li>
+              <li>If the <a>credential handler</a> has not provided a
+              <a>WebCredential</a> or null, reject the <a>Promise</a> that was
+              created by <a data-cite=
+              "!credential-management-1#dom-credentialscontainer-get">get()</a>
+              with a <a>DOMException</a> whose value "<a>OperationError</a>".
+              </li>
+            </ol>
+          </li>
+        </ol>
+      </section>
+      <section data-dfn-for="CredentialStoreEvent" data-link-for=
+      "CredentialStoreEvent">
+        <h2>
+          The <dfn>CredentialStoreEvent</dfn>
+        </h2>
+        <p>
+          The CredentialStoreEvent represents the data and methods available to
+          a Credential Handler after selection by the user. The user agent
+          communicates the <a>WebCredential</a> to be stored to the
+          Credential Handler.
+        </p>
+        <pre class="idl">
+        [Constructor(DOMString type, CredentialStoreEventInit eventInitDict), Exposed=ServiceWorker]
+        interface CredentialStoreEvent : ExtendableEvent {
+          readonly attribute USVString credentialRequestOrigin;
+          readonly attribute object credential;
+          readonly attribute DOMString hintKey;
+          Promise&lt;WindowClient?&gt; openWindow(USVString url);
+          void respondWith(Promise&lt;WebCredential&gt;handlerResponsePromise);
+        };
+        </pre>
+        <section>
+          <h2>
+            <dfn>credentialRequestOrigin</dfn> attribute
+          </h2>
+          <p>
+            This attribute is a string that indicates the <a data-cite=
+            "!HTML5#origin">origin</a> where the [[!credential-managment-1]]
+            method <a>store()</a> was called.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>credential</dfn> attribute
+          </h2>
+          <p>
+            This attribute contains <a>WebCredential</a> dictionary containing
+            the specific credential information that the web site is requesting
+            the user to store.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>hintKey</dfn> attribute
+          </h2>
+          <p>
+            This attribute indicates the <a>CredentialHint</a> selected by
+            the user. It corresponds to the <a data-lt=
+            "hintKey">hintKey</a> provided to the
+            <a>CredentialManager.hints</a> interface during registration.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>openWindow</dfn>() method
+          </h2>
+          <p>
+            This method is used by the credential handler to show a window to
+            the user. When called, it runs the <a>open window algorithm</a>.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn data-lt=
+            "respondWith(handlerResponsePromise)">respondWith()</dfn> method
+          </h2>
+          <p>
+            This method is used by the credential handler to provide a
+            <a>WebCredential</a> when the storage request has been fulfilled.
+            When called, it runs the <a>Respond to Store Credential
+            Algorithm</a> with <var>event</var> and
+            <var>handlerResponsePromise</var> as arguments.
+          </p>
+        </section>
+        <section data-dfn-for="CredentialStoreEventInit">
+          <h2>
+            <dfn>CredentialStoreEventInit</dfn> dictionary
+          </h2>
+          <pre class="idl">
+            dictionary CredentialStoreEventInit : ExtendableEventInit {
+              USVString credentialRequestOrigin;
+              WebCredential credential;
+              DOMString hintKey;
+            };
+          </pre>
+          <p>
+            The <dfn>credentialRequestOrigin</dfn>, <dfn>credential</dfn>, and
+            <dfn>hintKey</dfn> members share their definitions with those
+            defined for <a>CredentialStoreEvent</a>.
+          </p>
+        </section>
+      </section>
+      <section>
+        <h2>
+          Internal Slots
+        </h2>
+        <p>
+          Instances of <a>CredentialStoreEvent</a> are created with the
+          internal slots in the following table:
+        </p>
+        <table>
+          <tr>
+            <th>
+              Internal Slot
+            </th>
+            <th>
+              Default Value
+            </th>
+            <th>
+              Description (<em>non-normative</em>)
+            </th>
+          </tr>
+          <tr>
+            <td>
+              <dfn>[[\windowClient]]</dfn>
+            </td>
+            <td>
+              null
+            </td>
+            <td>
+              The currently active <dfn>WindowClient</dfn>. This is set if a
+              credential handler is currently showing a window to the user.
+              Otherwise, it is null.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <dfn>[[\fetchedImage]]</dfn>
+            </td>
+            <td>
+              undefined
+            </td>
+            <td>
+              This value is a result of <a data-cite=
+              "!appmanifest#fetching-image-objects">fetching image object</a>
+              or a fallback image provided by the user agent.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <dfn>[[\respondWithCalled]]</dfn>
+            </td>
+            <td>
+              false
+            </td>
+            <td>
+              YAHO
+            </td>
+          </tr>
+        </table>
+      </section>
+      <section>
+        <h2>
+          Handling a CredentialStoreEvent
+        </h2>
+        <p>
+          Upon receiving a credential storage request by way of <a data-cite=
+          "!credential-management-1#dom-credentialscontainer-store">store()</a>
+          and subsequent user selection of a credential hint, the <a>user
+          agent</a> MUST run the following steps:
+        </p>
+        <ol>
+          <li>Let <var>registration</var> be the
+          <a>ServiceWorkerRegistration</a> corresponding to the
+          <a>CredentialHint</a> selected by the user.
+          </li>
+          <li>If <var>registration</var> is not found, reject the
+          <a>Promise</a> that was created by <a data-cite=
+          "!credential-management-1#dom-credentialscontainer-store">store()</a>
+          with a <a>DOMException</a> whose value is "<a>InvalidStateError</a>"
+          and terminate these steps.
+          </li>
+          <li>Invoke the <a>handle functional event</a> algorithm with a
+          <a>ServiceWorkerRegistration</a> of <var>registration</var> and <var>
+            callbackSteps</var> set to the following steps:
+            <ol>
+              <li>Set <var>global</var> to the global object that was provided
+              as an argument.
+              </li>
+              <li>Create a <a>trusted event</a>, <var>e</var>, that uses the
+              <a>CredentialStoreEvent</a> interface, with the event type
+              <a>credentialstore</a>, which does not bubble, cannot be
+              canceled, and has no default action.
+              </li>
+              <li>Set the <a data-lt=
+              "CredentialStoreEvent.credentialRequestOrigin">credentialRequestOrigin</a>
+              attribute of <var>e</var> to the origin of the context where
+              <a data-cite=
+              "!credential-management-1#dom-credentialscontainer-store">store()</a>
+              was called.
+              </li>
+              <li>Set the <a data-lt=
+              "CredentialStoreEvent.credential">credential</a> attributes of
+              <var>e</var> to the <var>options</var> passed to
+              <a data-cite=
+              "!credential-management-1#dom-credentialscontainer-store">store()</a>.
+              </li>
+              <li>Set the <a data-lt=
+              "CredentialStoreEvent.hintKey">hintKey</a> attribute
+              of <var>e</var> to the <a>hintKey</a> of the selected
+              <a>CredentialHint</a>.
+              </li>
+              <li>Dispatch <var>e</var> to <var>global</var>.
+              </li>
+              <li>Wait for all of the promises in the <a>extend lifetime
+              promises</a> of <var>e</var> to resolve.
+              </li>
+              <li>If the <a>credential handler</a> has not provided a
+              <a>WebCredential</a> or null, reject the <a>Promise</a> that was
+              created by <a data-cite=
+              "!credential-management-1#dom-credentialscontainer-store">store()</a>
+              with a <a>DOMException</a> whose value "<a>OperationError</a>".
+              </li>
+            </ol>
+          </li>
+        </ol>
+      </section>
+    </section>
+    <section>
+      <h2>
+        <dfn data-lt="credential handler window">Windows</dfn>
+      </h2>
+      <p>
+        An invoked credential handler may or may not need to display information
+        about itself or request user input. Some examples of potential
+        credential handler display include:
+      </p>
+      <ul>
+        <li>The credential handler opens a window for the user to provide an
+        authorization code.
+        </li>
+        <li>The credential handler opens a window that makes it easy for the
+        user to select credentials using default information for the site
+        provided through previous user configuration.
+        </li>
+        <li>When first selected to pay in a given session, the credential
+        handler opens a window. For subsequent requests in the same session,
+        the credential handler (through configuration) performs its duties
+        without opening a window or requiring user interaction.
+        </li>
+      </ul>
+      <p>
+        A <a>credential handler</a> that requires visual display and user
+        interaction, may call openWindow() to display a page to the user.
+      </p>
+      <p class="note">
+        Since user agents know that this method is connected to the
+        <a>CredentialRequestEvent</a> or a <a>CredentialStoreEvent</a>, they
+        SHOULD render the window in a way that is consistent with the flow and
+        not confusing to the user. The resulting window client is bound to the
+        tab/window that initiated the request. A single
+        <a>credential handler</a> SHOULD NOT be allowed to open more than one
+        client window using this method.
+      </p>
+      <section>
+        <h2>
+          <dfn>Open Window Algorithm</dfn>
+        </h2>
+        <p class="issue" title="The Open Window Algorithm" data-number="xxx">
+          This algorithm resembles the <a data-cite=
+          "!SERVICE-WORKERS#clients-openwindow">Open Window Algorithm</a> in
+          the Service Workers specification and mirrors the one provided in
+          the Payment Handler API specification.
+        </p>
+        <p class="issue" data-number="xxx">
+          Should we refer to the Service Workers specification instead of
+          copying their steps?
+        </p>
+        <ol class="algorithm">
+          <li>Let <var>event</var> be this <a>CredentialRequestEvent</a> or
+          <a>CredentialStoreEvent</a>.
+          </li>
+          <li>Let <var>url</var> be the result of <a data-cite=
+          "!URL#concept-url-parser">parsing</a> the <var>url</var> argument.
+          </li>
+          <li>If the url parsing throws an exception, return a <a>Promise</a>
+          rejected with that exception.
+          </li>
+          <li>If <var>url</var> is <code>about:blank</code>, return a
+          <a>Promise</a> rejected with a <a>TypeError</a>.
+          </li>
+          <li>If <var>url</var>'s origin is not the same as the <a>service
+          worker</a>'s origin associated with the credential handler, return a
+          <a>Promise</a> resolved with null.
+          </li>
+          <li>If this algorithm is not <a data-cite=
+          "!HTML#triggered-by-user-activation">triggered by user
+          activation</a>, return a <a>Promise</a> rejected with a
+          <a>InvalidAccessError</a>.
+          </li>
+          <li>Let <var>promise</var> be a new <a>Promise</a>.
+          </li>
+          <li>Return <var>promise</var> and perform the remaining steps in
+          parallel:
+          </li>
+          <li>If <var>event</var>.<a>[[\windowClient]]</a> is not null, then:
+            <ol>
+              <li>If <var>event</var>.<a>[[\windowClient]]</a>.<a data-cite=
+              "!SERVICE-WORKERS#client-visibilitystate-attribute">visibilityState</a>
+              is not "unloaded", reject <var>promise</var> with a
+              <a>DOMException</a> whose name is "<a>InvalidStateError</a>" and
+              abort these steps.
+              </li>
+            </ol>
+          </li>
+          <li>Let <var>newContext</var> be a new <a data-cite=
+          "!HTML#top-level-browsing-context">top-level browsing context</a>.
+          </li>
+          <li>
+            <a data-cite="!HTML#navigate">Navigate</a> <var>newContext</var> to
+            <var>url</var>, with exceptions enabled and replacement enabled.
+          </li>
+          <li>If the navigation throws an exception, reject <var>promise</var>
+          with that exception and abort these steps.
+          </li>
+          <li>If the origin of <var>newContext</var> is not the same as the <a>
+            service worker client</a> origin associated with the credential
+            handler, then:
+            <ol>
+              <li>Resolve <var>promise</var> with null.
+              </li>
+              <li>Abort these steps.
+              </li>
+            </ol>
+          </li>
+          <li>Let <var>client</var> be the result of running the
+            <a data-cite="!SERVICE-WORKERS#create-windowclient-algorithm">create
+            window client</a> algorithm with <var>newContext</var> as the
+            argument.
+          </li>
+          <li>Set <var>event</var>.<a>[[\windowClient]]</a> to
+          <var>client</var>.
+          </li>
+          <li>Resolve <var>promise</var> with <var>client</var>.
+          </li>
+        </ol>
+      </section>
+      <section id="post-example" class="informative">
+        <h2>
+          Example of handling the <a>CredentialRequestEvent</a> or the
+          <a>CredentialStoreEvent</a>
+        </h2>
+        <p>
+          This example shows how to write a service worker that listens to the
+          <a>CredentialRequestEvent</a> and the <a>CredentialStoreEvent</a>.
+          When a <a>CredentialRequestEvent</a> or <a>CredentialStoreEvent</a>
+          is received, the service worker opens a window to interact with the
+          user.
+        </p>
+        <pre class="example js" title=
+        "Handling the CredentialRequestEvent or the CredentialStoreEvent">
+      self.addEventListener('credentialrequest', function(e) {
+        e.respondWith(new Promise(function(resolve, reject) {
+          self.addEventListener('message', listener = function(e) {
+            self.removeEventListener('message', listener);
+            if (e.data.hasOwnProperty('name')) {
+              reject(e.data);
+            } else {
+              resolve(e.data);
+            }
+          });
+
+          e.openWindow("https://www.example.com/wallet/get")
+          .then(function(windowClient) {
+            windowClient.postMessage(e.data);
+          })
+          .catch(function(err) {
+            reject(err);
+          });
+        }));
+      });
+
+      self.addEventListener('credentialstore', function(e) {
+        e.respondWith(new Promise(function(resolve, reject) {
+          self.addEventListener('message', listener = function(e) {
+            self.removeEventListener('message', listener);
+            if (e.data.hasOwnProperty('name')) {
+              reject(e.data);
+            } else {
+              resolve(e.data);
+            }
+          });
+
+          e.openWindow("https://www.example.com/wallet/store")
+          .then(function(windowClient) {
+            windowClient.postMessage(e.data);
+          })
+          .catch(function(err) {
+            reject(err);
+          });
+        }));
+      });
+      </pre>
+        <p>
+          Using the simple scheme described above, a trivial HTML page that is
+          loaded into the <a>credential handler window</a> might include the
+          following script:
+        </p>
+        <pre class="example html" title="Simple Credential Handler Window">
+&lt;script&gt;
+window.addEventListener("message", function(e) {
+  var credentialRequestOptions = event.data.credentialRequestOptions;
+
+  // TODO: process the query found in the request options and present
+  // choices to the user
+  // await ...
+
+  e.source.postMessage({
+    type: 'response',
+    credential: {
+      dataType: 'VerifiableProfile',
+      data: {
+        '@context': 'https://w3id.org/credentials/v1',
+        // ...
+        signature: { ... }
+      }
+    }
+  });
+  window.close();
+});
+&lt;/script&gt;
+      </pre>
+      </section>
+    </section>
+    <section>
+      <h2>
+        Response
+      </h2>
+      <section data-dfn-for="CredentialHandlerResponse" data-link-for=
+      "CredentialHandlerResponse">
+        <h2>
+          <dfn>CredentialHandlerResponse</dfn> dictionary
+        </h2>The CredentialHandlerResponse is conveyed using the following
+        dictionary:
+        <pre class="idl">
+          dictionary CredentialHandlerResponse {
+          DOMString dataType;
+          object data;
+          };
+        </pre>
+        <section>
+          <h2>
+            <dfn>dataType</dfn> attribute
+          </h2>
+          <p>
+            The <a>WebCredential type</a> for the credential that the user
+            selected to fulfill the request.
+          </p>
+        </section>
+        <section>
+          <h2>
+            <dfn>data</dfn> attribute
+          </h2>
+          <p>
+            A <a>JSON-serializable</a> object that provides a
+            <a>WebCredential type</a> specific message used by the relying
+            party to authenticate the user.
+          </p>
+          <p>
+            The user agent receives a successful response from the credential
+            handler through resolution of the Promise provided to the
+            <a data-lt="CredentialRequestEvent.respondWith">respondWith()</a>
+            function of the corresponding <a>CredentialRequestEvent</a>
+            interface.
+            The application is expected to resolve the Promise with a
+            <a>CredentialHandlerResponse</a> instance containing the response.
+            In case of user cancellation or error, the application may signal
+            failure by rejecting the Promise.
+          </p>
+          <p>
+            If the Promise is rejected, the user agent MUST run the
+            <dfn>credential repository failure algorithm</dfn>. The exact
+            details of this algorithm are left to implementers. Acceptable
+            behaviors include, but are not limited to:
+          </p>
+          <ul>
+            <li>Letting the user try again, with the same credential handler or
+            with a different one.
+            </li>
+            <li>Rejecting the Promise that was created by <a data-cite=
+            "!credential-management-1#dom-credentialscontainer-get">get()</a>
+            or <a data-cite=
+            "!credential-management-1#dom-credentialscontainer-store">store()</a>.
+            </li>
+          </ul>
+        </section>
+      </section>
+      <section>
+        <h2>
+          <dfn>Respond to Credential Request Algorithm</dfn>
+        </h2>
+        <p>
+          When this algorithm is invoked with <var>event</var> and
+          <var>handlerResponsePromise</var> parameters, the user agent MUST run
+          the following steps:
+        </p>
+        <ol class="algorithm">
+          <li>If <var>event</var>'s <a>dispatch flag</a> is unset, then
+          <a>throw</a> an "<a>InvalidStateError</a>" <a>DOMException</a> and
+          abort these steps.
+          </li>
+          <li>If <var>event</var>.<a>[[\respondWithCalled]]</a> is true, throw
+          an "<a>InvalidStateError</a>" <a>DOMException</a> and abort these
+          steps.
+          </li>
+          <li>Set <var>event</var>.<a>[[\respondWithCalled]]</a> to true.
+          </li>
+          <li>Set the <var>event</var>'s <a>stop propagation flag</a> and <var>
+            event</var>'s <a>stop immediate propagation flag</a>.
+          </li>
+          <li>Add <var>handlerResponsePromise</var> to the <var>event</var>'s
+          <a>extend lifetime promises</a>
+          </li>
+          <li>Increment the <var>event</var>'s <a>pending promises count</a> by
+          one.
+          </li>
+          <li>Upon <a>rejection</a> of <var>handlerResponsePromise</var>:
+            <ol>
+              <li>Run the <a>credential repository failure algorithm</a> and
+              terminate these steps.
+              </li>
+            </ol>
+          </li>
+          <li>Upon <a>fulfillment</a> of <var>handlerResponsePromise</var>:
+            <ol>
+              <li>Let <var>handlerResponse</var> be the result of
+              <a>converting</a> value to a <a>CredentialHandlerResponse</a>
+              dictionary. If this <a>throws</a> an exception, run the
+              <a>credential repository failure algorithm</a> and terminate
+              these steps.
+              </li>
+              <li>If <var>handlerResponse</var>.<a data-lt=
+              "CredentialHandlerResponse.methodName">dataType</a> is not
+              present or not set to one of the keys from
+              <var>event</var>.<a data-lt=
+              "CredentialRequestEvent.credentialRequestOptions">credentialRequestOptions</a>
+              (TODO: or the dataType for WebCredential for storage),
+              run the <a>credential repository failure algorithm</a> and terminate
+              these steps.
+              </li>
+              <li>If <var>handlerResponse</var>.<a data-lt=
+              "CredentialHandlerResponse.data">data</a> is not present or
+              not <a>JSON-serializable</a>, run the <a>credential repository
+              failure algorithm</a> and terminate these steps.
+              </li>
+              <li>Let <var>serializeDataType</var> be the result of
+              <a data-cite="!HTML#structuredserialize">StructuredSerialize</a>
+              with <var>handlerResponse</var>.<a data-lt=
+              "CredentialHandlerResponse.dataType">dataType</a>. Rethrow any
+              exceptions.
+              </li>
+              <li>Let <var>serializeData</var> be the result of
+                <a data-cite="!HTML#structuredserialize">StructuredSerialize</a>
+                with <var>handlerResponse</var>.<a data-lt=
+                "CredentialHandlerResponse.data">data</a>. Rethrow any
+                exceptions.
+              </li>
+              <li>TODO: integrate with credential management algorithms... or
+              an algorithm defining the creation of a WebCredential
+                <ol>
+                  <li>Let <var>dataType</var> be the result of
+                    <a data-cite="!HTML#structureddeserialize">StructuredDeserialize</a>
+                    with <var>serializeDataType</var>. Rethrow any
+                    exceptions.
+                  </li>
+                  <li>Let <var>data</var> be the result of <a data-cite=
+                  "!HTML#structureddeserialize">StructuredDeserialize</a> with
+                  <var>serializeData</var>. Rethrow any exceptions.
+                  </li>
+                  <li>If any exception occurs in any of the above steps, then
+                  run the <a>credential repository failure algorithm</a> and
+                  terminate these steps.
+                  </li>
+                  <li>Assign <var>dataType</var> to associated
+                  WebCredential's <a data-lt=
+                  "WebCredential"><var>credential</var>.dataType</a>.
+                  </li>
+                  <li>Assign <var>data</var> to associated WebCredential's
+                  <a data-lt=
+                  "WebCredential"><var>credential</var>.data</a>.
+                  </li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+          <li>Upon <a>fulfillment</a> or <a>rejection</a> of
+          <var>handlerResponsePromise</var>, <a data-cite=
+          "!HTML#queue-a-microtask">queue a microtask</a> to perform the
+          following steps:
+            <ol>
+              <li>Decrement the <var>event</var>'s <a>pending promises
+              count</a> by one.
+              </li>
+              <li>Let <var>registration</var> be the <a data-cite=
+              "!HTML#context-object">context object</a>'s <a data-cite=
+              "!HTML#relevant-settings-object">relevant global object</a>'s
+              associated <a>service worker</a>'s <a>containing service worker
+              registration</a>.
+              </li>
+              <li>If <var>registration</var>’s <a>uninstalling flag</a> is set,
+              invoke <a>Try Clear Registration</a> with
+              <var>registration</var>.
+              </li>
+              <li>If <var>registration</var> is not null, invoke <a>Try
+              Activate</a> with <var>registration</var>.
+              </li>
+            </ol>
+          </li>
+        </ol>
+        <p>
+          The following example shows how to respond to a credential request:
+        </p>
+        <pre class="example js" title="Sending a Credential Response">
+      credentialRequestEvent.respondWith(new Promise(function(accept,reject) {
+        /* ... processing may occur here ... */
+        accept({
+          dataType: "VerifiableProfile",
+          data: {
+            "@context": "https://w3id.org/credentials/v1",
+            // ...
+           }
+        });
+      }));
+          </pre>
+      </section>
+    </section>
+    <section id="security">
+      <h2>
+        Security and Privacy Considerations
+      </h2>
+      <section>
+        <h2>
+          Information about the User Environment
+        </h2>
+        <ul>
+          <li>The API does not share information about the user's registered
+          credential handlers. Information from origins is only shared with the
+          relying party with the consent of the user.
+          </li>
+          <li>Similarly, user agents should not share credential request
+          information with any credential handler until the user has selected
+          that credential handler.
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>
+          User Consent Before Sending Credentials
+        </h2>
+        <ul>
+          <li>One goal of this specification is to minimize the user
+          interaction required to send credentials. At the same time, user
+          agents must not permit combinations of configurations that would
+          enable invoking Web sites to request credentials and receive them
+          silently without any user consent.
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>
+          Secure Communications
+        </h2>
+        <ul>
+          <li>See <a data-cite=
+          "SERVICE-WORKERS#security-considerations">Service Worker security
+          considerations</a>
+          </li>
+          <li>WebCredential security is outside the scope of this specification
+          and is addressed by credential handlers that support managing them.
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>
+          Credential Repository Authenticity
+        </h2>
+        <ul>
+          <li>The user agent is not required to make available credential
+          handlers that pose security issues. When a credential handler is
+          unavailable for security reasons, the user agent should provide
+          rationale to the credential handler developers (e.g., through
+          console messages) and may also inform the user to help avoid
+          confusion.
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>
+          Data Validation
+        </h2>
+        <ul>
+          <li>Relying parties should validate that the WebCredential data they
+          have received through the Credential Management API is what they
+          expect.
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>
+          Private Browsing Mode
+        </h2>
+        <ul>
+          <li>When the Credential Management API is invoked in a "private
+          browsing mode," the user agent should launch credential handlers in
+          a private context. This will generally prevent sites from accessing
+          any previously-stored information. In turn, this is likely to
+          require either that the user log in to the origin or re-enter
+          details.
+          </li>
+        </ul>
+      </section>
+    </section>
+    <section id="dependencies">
+      <h2>
+        Dependencies
+      </h2>
+      <p>
+        This specification relies on several other underlying specifications.
+      </p>
+      <dl>
+        <dt>
+          Credential Management API
+        </dt>
+        <dd>
+          <dfn data-cite=
+          "!credential-management-1#dom-credentialscontainer-get">get()</dfn>,
+          and
+          <dfn data-cite=
+          "!credential-management-1#dom-credentialscontainer-store">store()</a>
+          are defined by the Credential Management Level 1 specification
+          [[!credential-management-1]].
+        </dd>
+        <dt>
+          ECMA-262 6th Edition, The ECMAScript 2015 Language Specification
+        </dt>
+        <dd>
+          The terms <dfn data-cite=
+          "!ECMA-262-2015#sec-promise-objects">Promise</dfn>, <dfn data-cite=
+          "!ECMA-262-2015#sec-object-internal-methods-and-internal-slots">internal
+          slot</dfn>, <code><dfn data-cite=
+          "!ECMA-262-2015#sec-native-error-types-used-in-this-standard-typeerror">
+          TypeError</dfn></code>, and <code><dfn data-cite=
+          "!ECMA-262-2015#sec-json.stringify">JSON.stringify</dfn></code> are
+          defined by [[!ECMA-262-2015]].
+          <p>
+            The term <dfn data-lt=
+            "JSON-serialized|JSON-serializable">JSON-serialize</dfn> applied to
+            a given object means to run the algorithm specified by the original
+            value of the <a>JSON.stringify</a> function on the supplied object,
+            passing the supplied object as the sole argument, and return the
+            resulting string. This can throw an exception.
+          </p>
+        </dd>
+        <dt>
+          HTML5
+        </dt>
+        <dd>
+          The terms <dfn data-cite="!HTML5#global-object">global object</dfn>,
+          <dfn data-cite="!HTML5#top-level-browsing-context">top-level browsing
+          context</dfn>, <dfn data-cite="!HTML5#structured-clone">structured
+          clone</dfn>, <dfn data-cite="!HTML5#event-handlers">event
+          handler</dfn>, <dfn data-cite="!HTML5#event-handler-event-type">event
+          handler event type</dfn>, <dfn data-cite=
+          "!HTML5#concept-events-trusted">trusted event</dfn>, and
+          <dfn data-cite="!HTML5#user-interaction-task-source">user interaction
+          task source</dfn> are defined by [[!HTML5]].
+        </dd>
+        <dt>
+          RFC6454
+        </dt>
+        <dd>
+          The term <dfn>origin</dfn> is defined in [[!RFC6454]].
+        </dd>
+        <dt>
+          Writing Promise-Using Specifications
+        </dt>
+        <dd>
+          The terms upon <dfn data-cite=
+          "!PROMISES-GUIDE#upon-fulfillment">fulfillment</dfn> and upon
+          <dfn data-cite="!PROMISES-GUIDE#upon-rejection">rejection</dfn> are
+          defined by [[!PROMISES-GUIDE]].
+        </dd>
+        <dt>
+          DOM
+        </dt>
+        <dd>
+          The term <dfn data-cite="!DOM4#firing-events">fires</dfn> (an event),
+          <dfn data-cite="!DOM#dispatch-flag">dispatch flag</dfn>,
+          <dfn data-cite="!DOM#stop-propagation-flag">stop propagation
+          flag</dfn>, and <dfn data-cite=
+          "!DOM#stop-immediate-propagation-flag">stop immediate propagation
+          flag</dfn> are defined in [[!DOM4]].
+        </dd>
+        <dt>
+          Web IDL
+        </dt>
+        <dd>
+          <p>
+            When this specification says to <dfn data-cite="!WEBIDL#dfn-throw"
+            data-lt="throws">throw</dfn> an error, the <a>user agent</a> must
+            throw an error as described in [[!WEBIDL]]. When this occurs in a
+            sub-algorithm, this results in termination of execution of the
+            sub-algorithm and all ancestor algorithms until one is reached that
+            explicitly describes procedures for catching exceptions.
+          </p>
+          <p>
+            The algorithm for <dfn data-cite=
+            "!WEBIDL#dfn-convert-idl-to-ecmascript-value" data-lt=
+            "converting">converting an ECMAScript value to a dictionary</dfn>
+            is defined by [[!WEBIDL]].
+          </p>
+          <p>
+            <dfn data-cite="!WEBIDL-LS#dfn-DOMException">DOMException</dfn> and
+            the following <a>DOMException</a> types from [[!WEBIDL-LS]] are
+            used:
+          </p>
+          <ul>
+            <li>"<code><dfn data-cite=
+            "!WEBIDL-LS#invalidaccesserror">InvalidAccessError</dfn></code>"
+            </li>
+            <li>"<code><dfn data-cite=
+            "!WEBIDL-LS#invalidstateerror">InvalidStateError</dfn></code>"
+            </li>
+            <li>"<code><dfn data-cite=
+            "!WEBIDL-LS#notallowederror">NotAllowedError</dfn></code>"
+            </li>
+            <li>"<code><dfn data-cite=
+            "!WEBIDL-LS#notfounderror">NotFoundError</dfn></code>"
+            </li>
+            <li>"<code><dfn data-cite=
+            "!WEBIDL-LS#operationerror">OperationError</dfn></code>"
+            </li>
+            <li>"<code><dfn data-cite=
+            "!WEBIDL-LS#securityerror">SecurityError</dfn></code>"
+            </li>
+          </ul>
+        </dd>
+        <dt>
+          Secure Contexts
+        </dt>
+        <dd>
+          The term <dfn data-cite="!SECURE-CONTEXTS#secure-context">secure
+          context</dfn> is defined by the Secure Contexts specification
+          [[!SECURE-CONTEXTS]].
+        </dd>
+        <dt>
+          Service Workers
+        </dt>
+        <dd>
+          The terms <dfn data-cite=
+          "!SERVICE-WORKERS#service-worker-concept">service worker</dfn>,
+          <dfn data-cite="!SERVICE-WORKERS#dfn-service-worker-client">service
+          worker client</dfn>, <code><dfn data-cite=
+          "!SERVICE-WORKERS#service-worker-registration-concept">ServiceWorkerRegistration</dfn></code>,
+          <code><dfn data-cite=
+          "!SERVICE-WORKERS#service-worker-global-scope">ServiceWorkerGlobalScope</dfn></code>,
+          <dfn data-cite=
+          "!SERVICE-WORKERS#handle-functional-event-algorithm">handle
+          functional event</dfn>, <dfn data-cite=
+          "!SERVICE-WORKERS#dfn-extend-lifetime-promises">extend lifetime
+          promises</dfn>,<dfn data-cite=
+          "!SERVICE-WORKERS#dfn-pending-promises-count">pending promises
+          count</dfn>, <dfn data-cite=
+          "!SERVICE-WORKERS#dfn-containing-service-worker-registration">containing
+          service worker registration</dfn>, <dfn data-cite=
+          "!SERVICE-WORKERS#dfn-uninstalling-flag">uninstalling flag</dfn>,
+          <dfn data-cite=
+          "!SERVICE-WORKERS#try-clear-registration-algorithm">Try Clear
+          Registration</dfn>, <dfn data-cite=
+          "!SERVICE-WORKERS#try-activate-algorithm">Try Activate</dfn>, and
+          <dfn data-cite="!SERVICE-WORKERS#dfn-scope-url">scope URL</dfn> are
+          defined in [[!SERVICE-WORKERS]].
+        </dd>
+      </dl>
+    </section>
+    <section class="appendix" id="idl-index"></section>
+
+    <section class="appendix informative">
+      <h2>Acknowledgements</h2>
+
+      <p>The authors would like to acknowledge the editors and authors of the
+        Payment Request and Payment Handler specifications as this specification
+        has been largely influenced by their design and language.</p>
+
+      <p>TODO</p>
+    </section>
+  </body>
+</html>
