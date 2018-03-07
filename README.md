@@ -10,6 +10,10 @@ will have to allow third party cookies "Always":
 
 https://stackoverflow.com/questions/38584273/local-storage-cross-domain-safari-disables-it-by-default/38793832
 
+A video of the demo is here:
+
+https://www.youtube.com/watch?v=bm3XBPB4cFY
+
 This is because the Credential Handler polyfill uses a neutral, shared, third
 party website to store the credential handler registrations users create. This
 is not the credentials themselves, but a registration list of the one or more
