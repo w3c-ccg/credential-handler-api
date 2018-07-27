@@ -1,6 +1,37 @@
 # credential-handler-api
 Repository for the Credential Handler specification of the Credentials Community Group
 
+## Background
+
+A Credential Handler is an event handler for credential request and
+credential storage events. The [Credential Handler API][] helps
+solve the [Nascar Problem](https://indieweb.org/NASCAR_problem). The
+[Credential Handler API][] enables websites to install Credential Handlers that
+can respond when users visit other websites that request or store credentials.
+
+For example, a user may visit a website that wants them to login using
+OpenIdConnect, provide an OAuth Token, authenticate using a [DID][], or present
+some [Verifiable Credentials][]. When these other websites use the [Credential
+Handler API][], the user is shown an in-browser selection screen with visual
+representations (e.g. icons and origin information) of only those
+Credential Handlers that they have been previously installed by the user and
+that are compatible with the website's request. Once the user makes a choice,
+the appropriate Credential Handler is loaded and a credential event is sent
+to it.
+
+The Credential Handler receives the event via a
+[Service Worker](https://w3c.github.io/ServiceWorker) or, if the
+[Credential Handler Polyfill][] is used, a simple page with no UI elements is
+loaded that uses the polyfill to receive and respond to the event.
+
+The Credential Handler must respond to the event with a credential that
+fulfills the request. If necessary, the Credential Handler may open a window
+on its website's origin to allow the user to interact with its website prior
+to responding. This UI can be styled and shaped according to the website
+owner's brand using arbitrary JavaScript and HTML like any other webpage.
+
+## Demo
+
 A demo of the credential handler in action is here:
 
 https://credential-repository.demo.digitalbazaar.com/
@@ -125,3 +156,12 @@ systems such as OpenIDConnect.
 TODO: Links to DID-Auth, Verifiable Credentials, and OpenIDConnect
 
 TODO: Diagrams of the roles and data flows
+
+[DID]: https://w3c-ccg.github.io/did-spec
+[Verifiable Credentials]: https://w3c.github.io/vc-data-model
+[Decentralized Identifiers (DIDs)]: https://w3c-ccg.github.io/did-spec
+[Credential Handler API]: https://w3c-ccg.github.io/credential-handler-api
+[Credential Handler API Repo]: https://github.com/w3c-ccg/credential-handler-api
+[Credential Handler API Demo]: https://github.com/digitalbazaar/credential-handler-demo
+[Credential Handler Polyfill]: https://github.com/digitalbazaar/credential-handler-polyfill
+
