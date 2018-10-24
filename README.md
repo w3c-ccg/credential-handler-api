@@ -32,7 +32,9 @@ owner's brand using arbitrary JavaScript and HTML like any other webpage.
 
 ## Demo
 
-A demo of the credential handler in action is here:
+***We provide a demo of this potential future Web feature below. Please note that the demo uses a polyfill that provides UI that emulates secure browser chrome. To repeat, this polyfill UI is an emulation and IS NOT actually implemented by the browser. Support for this API could make this UI (or most likely a much better one!) a reality in browsers in the future.***
+
+The demo of the credential handler in action is here:
 
 https://credential-repository.demo.digitalbazaar.com/
 
