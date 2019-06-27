@@ -42,23 +42,20 @@ A video of the demo is here:
 
 https://www.youtube.com/watch?v=bm3XBPB4cFY
 
-The demo works in Chrome, Firefox, and Edge. To make it work in Safari, you
-will have to allow third party cookies "Always":
+The demo works in Chrome, Firefox, Edge, and the latest version of Safari/iOS
+(Safari must have support for the Storage Access API):
 
-https://stackoverflow.com/questions/38584273/local-storage-cross-domain-safari-disables-it-by-default/38793832
-
-This setting change is required because the Credential Handler polyfill uses a
-neutral, shared, third party website to store the credential handler
+The Storage Access API is required in Safari because the Credential Handler
+polyfill uses a neutral, shared, third party website to store the credential handler
 registrations users create. This is not the credentials themselves, but a
 registration list of the one or more credential handlers (i.e. digital wallet
 URLs) that you have previously registered. Storage of this registration list
 enables the browser to show the user a UI with the digital wallets that could
-possibly fulfill a request for credentials from a relying party website. If
-this feature were implemented directly in the browser (rather than in a
-polyfill), this settings change would be unnecessary.
+possibly fulfill a request for credentials from a relying party website.
 
-This change is not required in Chrome, Firefox, or Edge because they already
-use this setting as their default for third party cookies and storage.
+Prior to implementing the Storage Access API, Safari partitioned its third
+party storage and cookies in such a way that the polyfill could not function
+without the user manually changing settings in the browser.
 
 ## Explainer
 
