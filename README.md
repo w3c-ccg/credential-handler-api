@@ -42,8 +42,8 @@ A video of the demo is here:
 
 https://www.youtube.com/watch?v=bm3XBPB4cFY
 
-The demo works in Chrome, Firefox, Edge, and the latest version of Safari/iOS
-(Safari must have support for the Storage Access API):
+The demo works in Chrome, Firefox, Edge, IE11, and the latest version of
+Safari/iOS (Safari must have support for the Storage Access API):
 
 The Storage Access API is required in Safari because the Credential Handler
 polyfill uses a neutral, shared, third party website to store the credential handler
