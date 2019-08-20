@@ -152,6 +152,43 @@ scheme/protocol.
 This flow works for DID-Auth, passing Verifiable Credentials, or using other
 systems such as OpenIDConnect.
 
+## IANA Considerations
+
+The following section should be submitted to the Internet Engineering Steering
+Group (IESG) for review, approval, and registration with IANA.
+
+#### `application/webcredential+json`
+
+<dl>
+  <dt>Type name:</dt>
+  <dd>application</dd>
+
+  <dt>Subtype name:</dt>
+  <dd>webcredential+json</dd>
+
+  <dt>Required parameters:</dt>
+  <dd>None</dd>
+
+  <dt>Encoding consideration:</dt>
+  <dd>TBD</dd>
+
+  <dt>Security considerations:</dt>
+  <dd>TBD</dd>
+
+  <dt>Interoperability considerations:</dt>
+  <dd>TBD</dd>
+
+  <dt>Published specification:</dt>
+  <dd>https://w3c-ccg.github.io/credential-handler-api</dd>
+
+  <dt>Applications that use this media type:</dt>
+  <dd>TBD</dd>
+</dl>
+
+
+
+---
+
 TODO: Links to DID-Auth, Verifiable Credentials, and OpenIDConnect
 
 TODO: Diagrams of the roles and data flows
@@ -163,4 +200,3 @@ TODO: Diagrams of the roles and data flows
 [Credential Handler API Repo]: https://github.com/w3c-ccg/credential-handler-api
 [Credential Handler API Demo]: https://github.com/digitalbazaar/credential-handler-demo
 [Credential Handler Polyfill]: https://github.com/digitalbazaar/credential-handler-polyfill
-
