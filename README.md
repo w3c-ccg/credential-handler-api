@@ -157,14 +157,14 @@ systems such as OpenIDConnect.
 The following section should be submitted to the Internet Engineering Steering
 Group (IESG) for review, approval, and registration with IANA.
 
-#### `application/webcredential+json`
+#### `application/credentialquery+json`
 
 <dl>
   <dt>Type name:</dt>
   <dd>application</dd>
 
   <dt>Subtype name:</dt>
-  <dd>webcredential+json</dd>
+  <dd>credentialquery+json</dd>
 
   <dt>Required parameters:</dt>
   <dd>None</dd>
