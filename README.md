@@ -36,7 +36,9 @@ owner's brand using arbitrary JavaScript and HTML like any other webpage.
 
 The demo of the credential handler in action is here:
 
-https://credential-repository.demo.digitalbazaar.com/
+1. [Demo Wallet](https://chapi-demo-wallet.digitalbazaar.com/)
+2. [Demo Issuer](https://chapi-demo-issuer.digitalbazaar.com/)
+3. [Demo Verifier](https://chapi-demo-verifier.digitalbazaar.com/)
 
 A video of the demo is here:
 
