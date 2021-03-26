@@ -69,7 +69,8 @@ played when passing credentials over the Web:
 ### Credential Repository
 
 This role handles credential storage and requests for a user, acting as their
-"wallet". This role is implemented as Web App on a credential wallet website.
+"wallet". This role is responsible for providing a "Credential Handler".
+This role is implemented as Web App on a credential wallet website.
 
 ### Credential Issuer
 
