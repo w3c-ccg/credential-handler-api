@@ -10,19 +10,19 @@ solve the [Nascar Problem](https://indieweb.org/NASCAR_problem). The
 can respond when users visit other websites that request or store credentials.
 
 For example, a user may visit a website that wants them to login using
-OpenIdConnect, provide an OAuth Token, authenticate using a [DID][], or present
-some [Verifiable Credentials][]. When these other websites use the [Credential
+OpenIDConnect, provide an OAuth Token, authenticate using a [DID][], or present
+some [Verifiable Credential][]. When these other websites use the [Credential
 Handler API][], the user is shown an in-browser selection screen with visual
-representations (e.g. icons and origin information) of only those
-Credential Handlers that they have been previously installed by the user and
+representations (e.g., icons and/or origin information) of only those
+Credential Handlers which have been previously installed by the user and
 that are compatible with the website's request. Once the user makes a choice,
-the appropriate Credential Handler is loaded and a credential event is sent
+the appropriate Credential Handler is loaded, and a credential event is sent
 to it.
 
 The Credential Handler receives the event via a
-[Service Worker](https://w3c.github.io/ServiceWorker) or, if the
+[Service Worker](https://w3c.github.io/ServiceWorker), or, if the
 [Credential Handler Polyfill][] is used, a simple page with no UI elements is
-loaded that uses the polyfill to receive and respond to the event.
+loaded, and it uses the polyfill to receive and respond to the event.
 
 The Credential Handler must respond to the event with a credential that
 fulfills the request. If necessary, the Credential Handler may open a window
@@ -44,19 +44,19 @@ A video of the demo is here:
 
 https://www.youtube.com/watch?v=bm3XBPB4cFY
 
-The demo works in Chrome, Firefox, Edge, IE11, and the latest version of
-Safari/iOS (Safari must have support for the Storage Access API):
+The demo works in Chrome, Firefox, Edge, IE11, and the most recent versions of
+Safari/iOS. (Safari must have support for the Storage Access API.)
 
 The Storage Access API is required in Safari because the Credential Handler
-polyfill uses a neutral, shared, third party website to store the credential handler
-registrations users create. This is not the credentials themselves, but a
-registration list of the one or more credential handlers (i.e. digital wallet
+polyfill uses a neutral, shared, third-party website to store the credential handler
+registrations users create. These are not the credentials themselves, but a
+registration list of the credential handler(s) (i.e., digital wallet
 URLs) that you have previously registered. Storage of this registration list
-enables the browser to show the user a UI with the digital wallets that could
+enables the browser to show the user a selector UI with the registered digital wallets that could
 possibly fulfill a request for credentials from a relying party website.
 
-Prior to implementing the Storage Access API, Safari partitioned its third
-party storage and cookies in such a way that the polyfill could not function
+Prior to implementing the Storage Access API, Safari partitioned its 
+third-party storage and cookies such that the polyfill could not function
 without the user manually changing settings in the browser.
 
 ## Explainer
@@ -92,68 +92,69 @@ user agent (browser).
 ## Typical Flow
 
 1. A user visits a "credential wallet" website.
+
 2. The wallet web app registers a "Credential Handler".
 
-During this step, the web app calls a new JavaScript API to register a piece of
+   During this step, the web app calls a new JavaScript API to register a piece of
 code (a "Credential Handler") that will execute when the user later elects to
 use the web app to fulfill a request for credentials or a request to store
 credentials.
 
 3. The user visits a Credential Issuer website to receive a credential.
 
-The Credential Issuer website calls the Credential Management API to store a
-new type of Web-based credential (i.e. essentially a third party credential, or
+   The Credential Issuer website calls the Credential Management API to store a
+new type of Web-based credential (i.e., essentially a third-party credential, or
 a credential that may be used across domains).
 
-4. The browser shows the user a UI with information (icons, text, origins)
+4. The browser shows the user a UI with information (such as icons, text, or origins)
   representing previously registered credential handlers that can store their
-  credential for them.
+  new credential.
 
-When the user makes a selection, the credential to be stored is forwarded to
-the chosen handler which then allows the user to interact with the associated
+   When the user makes a selection, the credential to be stored is forwarded to
+the chosen handler, which then allows the user to interact with the associated
 Web App from the wallet origin as needed to complete the storage request.
 
-The browser is playing the "Mediator" role here: forwarding a request from the
-Credential Issuer to a third party Credential Repository of the user's choice.
+   The browser is playing the "Mediator" role here: forwarding a request from the
+Credential Issuer to a third-party Credential Repository of the user's choice.
 The Credential Issuer doesn't care which wallet is used. All the mediator needs
-to do is be able to match up credential storage requests with wallets that
-support their storage and present these options to the user.
+to do is match up credential storage requests with wallets that
+support their storage, and present these options to the user.
 
-5. The user visits a Credential Verifier website which requests third party
+5. The user visits a Credential Verifier website which requests third-party
   (Web-based) credentials.
 
-Here the Credential Verifier website calls the Credential Management API using
-a query for a new type of Web-based credential (i.e. essentially a third party
+   Here the Credential Verifier website calls the Credential Management API using
+a query for a new type of Web-based credential (i.e., essentially a third-party
 credential, or a credential that may be used across domains).
 
 6. The browser shows the user a UI with information (icons, text, origins)
   representing previously registered credential handlers.
 
-When the user makes a selection, the Credential Verifier's request is forwarded
+   When the user makes a selection, the Credential Verifier's request is forwarded
 to the chosen credential handler.
 
-The browser is playing the "Mediator" role here: forwarding a request from the
-Credential Verifier to a third party Credential Repository of the user's
+   The browser is playing the "Mediator" role here: forwarding a request from the
+Credential Verifier to a third-party Credential Repository of the user's
 choice. The Credential Verifier doesn't care which wallet is used; they have
 a trust relationship with Credential Issuers, not the wallet provider. All the
-mediator needs to do is be able to match up requests for credentials to the
-user's preferred wallets for fulfilling those requests.
+mediator needs to do is match up requests for credentials to the
+user's preferred wallet(s) for fulfilling those requests.
 
-7. The user interacts (as needed) with the wallet Web App and chooses the
+7. The user interacts as needed with the wallet Web App, and chooses the
   credentials to fulfill the request.
 
-Here the Web App resolves a Promise with the user's response. The response
-may include additional authentication information is necessary to prove
-ownership over the credentials. This is up to the specific Web credential
-scheme/protocol.
+   Here the Web App resolves a Promise with the user's response. If required 
+by the specific Web credential scheme/protocol, the response
+may include additional authentication information to prove
+ownership over the credentials.
 
 8. The browser forwards the credential response to the Credential Verifier.
 
-9. The Credential Verifier verifies the credentials and proceeds however
+9. The Credential Verifier verifies the credentials, and proceeds however
   it sees fit.
 
-This flow works for DID-Auth, passing Verifiable Credentials, or using other
-systems such as OpenIDConnect.
+   This flow works for DID-Auth, passing Verifiable Credentials, or using other
+systems such as OpenID Connect (OIDC).
 
 ## IANA Considerations
 
