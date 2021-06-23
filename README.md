@@ -40,11 +40,10 @@ The demo of the credential handler in action is here:
 2. [Demo Issuer](https://chapi-demo-issuer.digitalbazaar.com/)
 3. [Demo Verifier](https://chapi-demo-verifier.digitalbazaar.com/)
 
-A video of the demo is here:
+Please see the [polyfill README][] for animated GIFs of the polyfill and
+demo in action.
 
-https://www.youtube.com/watch?v=bm3XBPB4cFY
-
-The demo works in Chrome, Firefox, Edge, IE11, and the most recent versions of
+The demo sites work in Chrome, Firefox, Edge, and the most recent versions of
 Safari/iOS. (Safari must have support for the Storage Access API.)
 
 The Storage Access API is required in Safari because the Credential Handler
@@ -204,3 +203,4 @@ TODO: Diagrams of the roles and data flows
 [Credential Handler API Repo]: https://github.com/w3c-ccg/credential-handler-api
 [Credential Handler API Demo]: https://github.com/digitalbazaar/credential-handler-demo
 [Credential Handler Polyfill]: https://github.com/digitalbazaar/credential-handler-polyfill
+[polyfill README]: https://github.com/digitalbazaar/credential-handler-polyfill#credential-handler-api-polyfill-credential-handler-polyfill
