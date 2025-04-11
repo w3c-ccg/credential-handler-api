@@ -864,8 +864,8 @@
         &lt;script&gt;
 
         const hintKey = "c8126178-3bba-4d09-8f00-0771bcfd3b11";
-        const { registration } = await navigator.serviceWorker.register("/register/sw.js");
-        await registration.credentialManager.credentialHints.set({
+        const registration = await navigator.serviceWorker.register("/register/sw.js");
+        await registration.credentialManager.credentialHints.set(
           hintKey,
           {
             name: "My social account: pat@example.com",
@@ -882,7 +882,7 @@
             }
           });
 
-        const { storedHint } =
+        const storedHint =
           await registration.credentialManager.credentialHints.get(hintKey);
 
         // storedHint.icons[0].src == "https://www.example.com/wallet/icon/lowres.webp";
@@ -895,7 +895,7 @@
         // In this example, code is located in https://www.example.com/register/sw.js
 
         const hintKey = "c8126178-3bba-4d09-8f00-0771bcfd3b11";
-        await self.registration.credentialManager.credentialHints.set({
+        await self.registration.credentialManager.credentialHints.set(
           hintKey,
           {
             name: "My social account: pat@example.com",
@@ -912,7 +912,7 @@
             }
           });
 
-        const { storedHint } =
+        const storedHint =
           await registration.credentialManager.credentialHints.get(hintKey);
 
         // storedHint.icons[0].src == "https://www.example.com/wallet/icon/lowres.webp";
@@ -936,11 +936,11 @@
             return;
           }
 
-          const { registration } =
+          const registration =
             await navigator.serviceWorker.register('/sw.js');
 
           // Excellent, we got it! Let's now set up the user's hints.
-          await addInstruments(registration);
+          await addHints(registration);
         }, { once: true });
 
         function addHints(registration) {
