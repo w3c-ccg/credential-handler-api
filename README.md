@@ -36,9 +36,9 @@ owner's brand using arbitrary JavaScript and HTML like any other webpage.
 
 The demo of the credential handler in action is here:
 
-1. [Demo Wallet](https://chapi-demo-wallet.digitalbazaar.com/)
-2. [Demo Issuer](https://chapi-demo-issuer.digitalbazaar.com/)
-3. [Demo Verifier](https://chapi-demo-verifier.digitalbazaar.com/)
+1. [Demo Wallet](https://wallet.example.chapi.io/)
+2. [Demo Issuer](https://issuer.example.chapi.io/)
+3. [Demo Verifier](https://verifier.example.chapi.io/)
 
 Please see the [polyfill README][] for animated GIFs of the polyfill and
 demo in action.
@@ -196,11 +196,13 @@ TODO: Links to DID-Auth, Verifiable Credentials, and OpenIDConnect
 
 TODO: Diagrams of the roles and data flows
 
-[DID]: https://w3c-ccg.github.io/did-spec
+[DID]: https://w3c.github.io/did
 [Verifiable Credentials]: https://w3c.github.io/vc-data-model
-[Decentralized Identifiers (DIDs)]: https://w3c-ccg.github.io/did-spec
+[Decentralized Identifiers (DIDs)]: https://w3c.github.io/did
 [Credential Handler API]: https://w3c-ccg.github.io/credential-handler-api
 [Credential Handler API Repo]: https://github.com/w3c-ccg/credential-handler-api
-[Credential Handler API Demo]: https://github.com/digitalbazaar/credential-handler-demo
-[Credential Handler Polyfill]: https://github.com/digitalbazaar/credential-handler-polyfill
-[polyfill README]: https://github.com/digitalbazaar/credential-handler-polyfill#credential-handler-api-polyfill-credential-handler-polyfill
+[Credential Handler Polyfill]: https://github.com/credential-handler/credential-handler-polyfill
+[Credential Handler Wallet Demo Repo]: https://github.com/credential-handler/chapi-demo-wallet
+[Credential Handler Issuer Demo Repo]: https://github.com/credential-handler/chapi-demo-issuer
+[Credential Handler Verifier Demo Repo]: https://github.com/credential-handler/chapi-demo-verifier
+[polyfill README]: https://github.com/credential-handler/credential-handler-polyfill#credential-handler-api-polyfill-credential-handler-polyfill
